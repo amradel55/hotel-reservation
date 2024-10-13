@@ -1,22 +1,55 @@
 package api
 
 import (
+	"errors"
+
 	"github.com/amradel55/hotel-reservation/db"
 	"github.com/amradel55/hotel-reservation/types"
 	"github.com/gofiber/fiber/v2"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type USerHandler struct {
+type UserHandler struct {
 	userStore db.UserStore
 }
 
-func NewUserHandler(userStore db.UserStore) *USerHandler {
-	return &USerHandler{
+func NewUserHandler(userStore db.UserStore) *UserHandler {
+	return &UserHandler{
 		userStore: userStore,
 	}
 }
 
-func (h *USerHandler) HandlePostUser(c *fiber.Ctx) error {
+func (h *UserHandler) HandlePutUser(c *fiber.Ctx) error {
+	var (
+		//values bson.M
+		params types.UpdateUserParams
+		userId = c.Params("id")
+	)
+	oid, err := primitive.ObjectIDFromHex(userId)
+	if err != nil {
+		return err
+	}
+	if err := c.BodyParser(&params); err != nil {
+		return err
+	}
+	filter := bson.M{"_id": oid}
+	if err := h.userStore.UpdateUser(c.Context(), filter, params); err != nil {
+		return err
+	}
+	return c.JSON(map[string]string{"updated": userId})
+}
+
+func (h *UserHandler) HandleDeleteUser(c *fiber.Ctx) error {
+	userID := c.Params("id")
+	if err := h.userStore.DeleteUser(c.UserContext(), userID); err != nil {
+		return err
+	}
+	return c.JSON(map[string]string{"msg": "success", "deleted": userID})
+}
+
+func (h *UserHandler) HandlePostUser(c *fiber.Ctx) error {
 	var params types.CreateUserParams
 	if err := c.BodyParser(&params); err != nil {
 		return err
@@ -35,7 +68,7 @@ func (h *USerHandler) HandlePostUser(c *fiber.Ctx) error {
 	return c.JSON(insertedUser)
 }
 
-func (h *USerHandler) HandleGetUsers(c *fiber.Ctx) error {
+func (h *UserHandler) HandleGetUsers(c *fiber.Ctx) error {
 	users, err := h.userStore.GetUsers(c.Context())
 	if err != nil {
 		return err
@@ -43,13 +76,16 @@ func (h *USerHandler) HandleGetUsers(c *fiber.Ctx) error {
 	return c.JSON(users)
 }
 
-func (h *USerHandler) HandleGetUser(c *fiber.Ctx) error {
+func (h *UserHandler) HandleGetUser(c *fiber.Ctx) error {
 	var (
 		id = c.Params("id")
 	)
 
 	user, err := h.userStore.GetUserByID(c.Context(), id)
 	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return c.JSON(map[string]string{"msg": "fail", "error": "NOT FOUND"})
+		}
 		return err
 	}
 	return c.JSON(user)
