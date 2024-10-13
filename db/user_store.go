@@ -12,7 +12,12 @@ import (
 
 const userCollection = "users"
 
+type Dropper interface {
+	Drop(context.Context) error
+}
+
 type UserStore interface {
+	Dropper
 	GetUserByID(context.Context, string) (*types.User, error)
 	GetUsers(context.Context) ([]*types.User, error)
 	InsertUser(context.Context, *types.User) (*types.User, error)
@@ -26,13 +31,18 @@ type MongoUserStore struct {
 	collection *mongo.Collection
 }
 
-func NewMongoUserStore(c *mongo.Client) *MongoUserStore {
+func NewMongoUserStore(c *mongo.Client, dbName string) *MongoUserStore {
 
 	return &MongoUserStore{
 		client:     c,
-		collection: c.Database(DBNAME).Collection(userCollection),
+		collection: c.Database(dbName).Collection(userCollection),
 	}
 
+}
+
+func (s *MongoUserStore) Drop(ctx context.Context) error {
+	fmt.Println("--- dropping user collection ---")
+	return s.collection.Drop(ctx)
 }
 
 func (s *MongoUserStore) UpdateUser(ctx context.Context, filter bson.M, params types.UpdateUserParams) error {
