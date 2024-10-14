@@ -12,10 +12,6 @@ import (
 
 const userCollection = "users"
 
-type Dropper interface {
-	Drop(context.Context) error
-}
-
 type UserStore interface {
 	Dropper
 	GetUserByID(context.Context, string) (*types.User, error)
