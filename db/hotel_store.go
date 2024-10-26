@@ -18,7 +18,7 @@ type HotelStore interface {
 	UpdateHotel(context.Context, bson.M, types.UpdateHotelParams) error
 	pushRoom(context.Context, bson.M, bson.M) error
 	GetHotels(context.Context, bson.M) ([]*types.Hotel, error)
-	GetHotelByID(context.Context, string) (*types.Hotel, error)
+	GetHotelByID(context.Context, primitive.ObjectID) (*types.Hotel, error)
 	DeleteHotel(context.Context, string) error
 }
 
@@ -85,13 +85,9 @@ func (s *MongoHotelStore) DeleteHotel(ctx context.Context, id string) error {
 
 }
 
-func (s *MongoHotelStore) GetHotelByID(cxt context.Context, id string) (*types.Hotel, error) {
-	oid, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return nil, err
-	}
+func (s *MongoHotelStore) GetHotelByID(cxt context.Context, id primitive.ObjectID) (*types.Hotel, error) {
 	var hotel types.Hotel
-	if err := s.collection.FindOne(cxt, bson.M{"_id": oid}).Decode(&hotel); err != nil {
+	if err := s.collection.FindOne(cxt, bson.M{"_id": id}).Decode(&hotel); err != nil {
 		return nil, err
 	}
 	return &hotel, nil

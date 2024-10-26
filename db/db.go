@@ -8,6 +8,13 @@ const (
 	DBURI      = "mongodb://localhost:27017"
 )
 
+// does that give the access to hole stores even the domain doesn't need it?
+type Store struct {
+	User  UserStore
+	Hotel HotelStore
+	Room  RoomStore
+}
+
 type Dropper interface {
 	Drop(context.Context) error
 }
