@@ -3,6 +3,7 @@ package api
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/amradel55/hotel-reservation/db"
@@ -32,6 +33,11 @@ type AuthResponse struct {
 	Token string      `json:"token"`
 }
 
+type genericResp struct {
+	Status string `json:"status"`
+	Msg    string `json:"msg"`
+}
+
 func (h *AuthHandler) HandleAuthenticate(c *fiber.Ctx) error {
 	var params AuthParams
 	if err := c.BodyParser(&params); err != nil {
@@ -41,12 +47,18 @@ func (h *AuthHandler) HandleAuthenticate(c *fiber.Ctx) error {
 	user, err := h.userStore.GetUserByEmail(c.Context(), params.Email)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return fmt.Errorf("invalid Credentials")
+			return c.Status(http.StatusBadRequest).JSON(genericResp{
+				Status: "error",
+				Msg:    "invalid Credentials",
+			})
 		}
 		return err
 	}
 	if !types.IsValidPassword(user.EncryptedPassword, params.Password) {
-		return fmt.Errorf("invalid Credentials")
+		return c.Status(http.StatusBadRequest).JSON(genericResp{
+			Status: "error",
+			Msg:    "invalid Credentials",
+		})
 	}
 	res := AuthResponse{
 		User:  user,

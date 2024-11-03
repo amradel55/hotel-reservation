@@ -45,10 +45,10 @@ func TestPostUser(t *testing.T) {
 	app.Post("/", UserHandler.HandlePostUser)
 
 	params := types.CreateUserParams{
-		Email:     "some@foo.com",
-		FirstName: "james",
-		LastName:  "foo",
-		Password:  "dfdfdfdfdfdfdfdfdfdfdf",
+		Email:     "amr.adel@hotel.com",
+		FirstName: "Amr",
+		LastName:  "Adel",
+		Password:  "test",
 	}
 
 	b, _ := json.Marshal(params)

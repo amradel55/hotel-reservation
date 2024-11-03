@@ -10,9 +10,10 @@ const (
 
 // does that give the access to hole stores even the domain doesn't need it?
 type Store struct {
-	User  UserStore
-	Hotel HotelStore
-	Room  RoomStore
+	User    UserStore
+	Hotel   HotelStore
+	Room    RoomStore
+	Booking BookingStore
 }
 
 type Dropper interface {
